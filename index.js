@@ -1,2 +1,4 @@
-export * from './Menubar.js';
-export * from './Popup.js';
+import Menubar from './Menubar.js';
+import Popup from './Popup.js';
+
+export { Menubar, Popup };
