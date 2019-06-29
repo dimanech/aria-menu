@@ -1,0 +1,80 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+<body>
+	
+	<script type="module">
+		import { Menubar } from './index.js';
+		//import Hamburger from './HamburgerMenu.js'
+		
+		const mobileNav = document.querySelector('[data-js-nav]');
+		const desktopNav = document.querySelector('[data-js-menu-bar]');
+		
+		if (mobileNav && desktopNav) {
+			const bar = new Menubar(desktopNav);
+			//const hamburger = new Hamburger(mobileNav);
+			
+			let isBarInited = false;
+			let isHamburgerInited = false;
+			const initBar = () => {
+				bar.init();
+				isBarInited = true;
+			};
+			const initHamburger = () => {
+				//hamburger.init();
+				isHamburgerInited = true;
+			};
+			
+			let lastBreakpoint;
+			const getBreakpoint = () => {
+				const isDesktop = (window.innerWidth >= 1024);
+				const currentBreakpoint = isDesktop ? 'desktop' : 'mobile';
+				
+				if (currentBreakpoint === lastBreakpoint) {
+					return '';
+				}
+				lastBreakpoint = currentBreakpoint;
+				return currentBreakpoint;
+			};
+			
+			const toggleNavigation = () => {
+				const breakP = getBreakpoint();
+				
+				if (breakP === 'desktop') {
+					if (isHamburgerInited) {
+						//hamburger.destroy();
+					}
+					initBar();
+				}
+				
+				if (breakP === 'mobile') {
+					if (isBarInited) {
+						bar.destroy();
+					}
+					initHamburger();
+				}
+			};
+			
+			if (window.innerWidth >= 1024) {
+				initBar();
+			} else {
+				initHamburger();
+			}
+			
+			window.addEventListener('resize', toggleNavigation);
+		}
+	</script>
+	
+	
+	<script type="module">
+		import { Popup } from './index.js';
+		document.querySelectorAll('[data-js-popup-button]')
+			.forEach(popupButton => new Popup(popupButton).init());
+	</script>
+	
+</body>
+</html>
