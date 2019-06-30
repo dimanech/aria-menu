@@ -17,6 +17,23 @@ Please see full specs:
 * https://www.w3.org/TR/wai-aria-practices/#menu
 * https://www.w3.org/TR/wai-aria-practices/#menubutton
 
+## Supporting browsers
+
+* IE10 (with Babel + DOM Collections forEach)
+* Edge 44.18362.1.0
+* Chrome 75.0.3770.100
+* Safari 12.1.1
+* Firefox 67.0.4
+
+---
+
+* MacOS VoiceOver Utiltiy (v9 562.858) with Safari, Google Chrome
+* Gnome Orca Screen Reader 3.32 with Firefox (Gecko) and Epiphany (WebKitGtk)
+
+### Known limitations
+
+* sometimes when user hover over menu and use keyboard at the same time - hovered menu could stay visible
+
 ## Initialization
 
 This module designed as library that could be used as starting point on the project. It is not

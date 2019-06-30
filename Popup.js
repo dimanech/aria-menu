@@ -31,12 +31,6 @@ export default class Popup {
 			RIGHT: 39,
 			DOWN: 40,
 		});
-
-		this.handleKeydown = this.handleKeydown.bind(this);
-		this.handleFocus = this.handleFocus.bind(this);
-		this.handleBlur = this.handleBlur.bind(this);
-		this.handleMouseenter = this.handleMouseenter.bind(this);
-		this.handleMouseleave = this.handleMouseleave.bind(this);
 	}
 
 	init() {
@@ -50,6 +44,12 @@ export default class Popup {
 	}
 
 	initEventListeners() {
+		this.handleKeydown = this.handleKeydown.bind(this);
+		this.handleFocus = this.handleFocus.bind(this);
+		this.handleBlur = this.handleBlur.bind(this);
+		this.handleMouseenter = this.handleMouseenter.bind(this);
+		this.handleMouseleave = this.handleMouseleave.bind(this);
+
 		this.domNode.addEventListener('keydown', this.handleKeydown);
 		this.domNode.addEventListener('focus', this.handleFocus);
 		this.domNode.addEventListener('blur', this.handleBlur);

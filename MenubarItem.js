@@ -31,12 +31,6 @@ export default class MenubarItem {
 			RIGHT: 39,
 			DOWN: 40,
 		});
-
-		this.handleKeydown = this.handleKeydown.bind(this);
-		this.handleFocus = this.handleFocus.bind(this);
-		this.handleBlur = this.handleBlur.bind(this);
-		this.handleMouseover = this.handleMouseover.bind(this);
-		this.handleMouseout = this.handleMouseout.bind(this);
 	}
 
 	init() {
@@ -52,6 +46,12 @@ export default class MenubarItem {
 	}
 
 	initEventListeners() {
+		this.handleKeydown = this.handleKeydown.bind(this);
+		this.handleFocus = this.handleFocus.bind(this);
+		this.handleBlur = this.handleBlur.bind(this);
+		this.handleMouseover = this.handleMouseover.bind(this);
+		this.handleMouseout = this.handleMouseout.bind(this);
+
 		this.domNode.addEventListener('keydown', this.handleKeydown);
 		this.domNode.addEventListener('focus', this.handleFocus);
 		this.domNode.addEventListener('blur', this.handleBlur);

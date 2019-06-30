@@ -27,11 +27,6 @@ export default class MenuItem {
 			RIGHT: 39,
 			DOWN: 40,
 		});
-
-		this.handleKeydown = this.handleKeydown.bind(this);
-		this.handleClick = this.handleClick.bind(this);
-		this.handleFocus = this.handleFocus.bind(this);
-		this.handleBlur = this.handleBlur.bind(this);
 	}
 
 	init() {
@@ -40,6 +35,11 @@ export default class MenuItem {
 	}
 
 	initEventListeners() {
+		this.handleKeydown = this.handleKeydown.bind(this);
+		this.handleClick = this.handleClick.bind(this);
+		this.handleFocus = this.handleFocus.bind(this);
+		this.handleBlur = this.handleBlur.bind(this);
+
 		this.domNode.addEventListener('keydown', this.handleKeydown);
 		this.domNode.addEventListener('click', this.handleClick);
 		this.domNode.addEventListener('focus', this.handleFocus);

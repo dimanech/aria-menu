@@ -25,9 +25,6 @@ export default class PopupMenu {
 		this.hasHover = false;
 
 		this.timout = 60;
-
-		this.handleMouseover = this.handleMouseover.bind(this);
-		this.handleMouseout = this.handleMouseout.bind(this);
 	}
 
 	init() {
@@ -36,6 +33,9 @@ export default class PopupMenu {
 	}
 
 	initEventListeners() {
+		this.handleMouseover = this.handleMouseover.bind(this);
+		this.handleMouseout = this.handleMouseout.bind(this);
+
 		this.domNode.addEventListener('mouseenter', this.handleMouseover);
 		this.domNode.addEventListener('mouseleave', this.handleMouseout);
 	}

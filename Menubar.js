@@ -26,9 +26,6 @@ export default class Menubar {
 
 		this.body = document.body;
 		this.flyout = this.domNode.querySelector('[data-js-menu-flyout-pane]');
-
-		this.handleMouseEnter = this.handleMouseEnter.bind(this);
-		this.handleMouseLeave = this.handleMouseLeave.bind(this);
 	}
 
 	init() {
@@ -61,6 +58,9 @@ export default class Menubar {
 	}
 
 	initEventListeners() {
+		this.handleMouseEnter = this.handleMouseEnter.bind(this);
+		this.handleMouseLeave = this.handleMouseLeave.bind(this);
+
 		this.domNode.addEventListener('mouseenter', this.handleMouseEnter);
 		this.domNode.addEventListener('mouseleave', this.handleMouseLeave);
 	}
