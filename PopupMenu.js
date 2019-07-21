@@ -9,27 +9,30 @@ export default class PopupMenu {
 	 * https://www.w3.org/TR/wai-aria-practices/#menubutton
 	 */
 	constructor(domNode, controllerObj) {
-		PopupMenu.checkRequiredStructure(domNode);
-
-		this.isMenubar = false;
+		PopupMenu.validateStructure(domNode);
 
 		this.domNode = domNode;
 		this.controller = controllerObj;
 
 		this.menuitems = [];
 
-		this.firstItem = null;
-		this.lastItem = null;
-
 		this.hasFocus = false;
 		this.hasHover = false;
 
-		this.timout = 60;
+		this.firstItem = null;
+		this.lastItem = null;
+
+		this.mouseOutTimeout = 30;
+
+		this.cssClassNames = {
+			open: '_open'
+		};
 	}
 
 	init() {
 		this.initEventListeners();
 		this.initMenuItems();
+		this.initFirstAndLastElements();
 	}
 
 	initEventListeners() {
@@ -41,16 +44,15 @@ export default class PopupMenu {
 	}
 
 	initMenuItems() {
-		// Traverse the element children of domNode: configure each with
-		// menuitem role behavior and store reference in menuitems array.
-		// Change this to recursive init submenus
+		// Change this to recursive init submenus if needed
 		this.domNode.querySelectorAll('[role="menuitem"]').forEach((item) => {
 			const menuItem = new MenuItem(item, this);
 			menuItem.init();
 			this.menuitems.push(menuItem);
 		});
+	}
 
-		// Use populated menuitems array to initialize firstItem and lastItem.
+	initFirstAndLastElements() {
 		const numItems = this.menuitems.length;
 		if (numItems > 0) {
 			// eslint-disable-next-line prefer-destructuring
@@ -65,7 +67,9 @@ export default class PopupMenu {
 
 	handleMouseout() {
 		this.hasHover = false;
-		setTimeout(this.close.bind(this, false), this.timout);
+		// Need timeout to improve UX. Note that controller should implement this
+		// timeout also.
+		setTimeout(this.close.bind(this), this.mouseOutTimeout);
 	}
 
 	setFocusToController(cmd) {
@@ -73,6 +77,7 @@ export default class PopupMenu {
 
 		if (command === '') {
 			if (this.controller && this.controller.domNode) {
+				// focus controller node and handle event on his side
 				this.controller.domNode.focus();
 			}
 			return;
@@ -80,78 +85,69 @@ export default class PopupMenu {
 
 		if (this.controller.isMenubarItem) {
 			if (command === 'previous') {
-				this.controller.menu.setFocusToPreviousItem(this.controller);
+				this.controller.menuBar.setFocusToPreviousItem(this.controller);
 			}
 			if (command === 'next') {
-				this.controller.menu.setFocusToNextItem(this.controller);
+				this.controller.menuBar.setFocusToNextItem(this.controller);
 			}
 		}
+	}
+
+	setFocusToItem(newItem) {
+		newItem.domNode.tabIndex = 0;
+		newItem.domNode.focus();
 	}
 
 	setFocusToFirstItem() {
-		this.firstItem.domNode.focus();
+		this.setFocusToItem(this.firstItem);
 	}
 
 	setFocusToLastItem() {
-		this.lastItem.domNode.focus();
+		this.setFocusToItem(this.lastItem);
 	}
 
 	setFocusToPreviousItem(currentItem) {
-		if (currentItem === this.firstItem) {
-			this.lastItem.domNode.focus();
-		} else {
-			const index = this.menuitems.indexOf(currentItem);
-			this.menuitems[index - 1].domNode.focus();
-		}
+		const newItem = (currentItem === this.firstItem) ? this.lastItem
+			: this.menuitems[this.getItemIndex(currentItem) - 1];
+		this.setFocusToItem(newItem);
 	}
 
 	setFocusToNextItem(currentItem) {
-		if (currentItem === this.lastItem) {
-			this.firstItem.domNode.focus();
-		} else {
-			const index = this.menuitems.indexOf(currentItem);
-			this.menuitems[index + 1].domNode.focus();
-		}
+		const newItem = (currentItem === this.lastItem) ? this.firstItem
+			: this.menuitems[this.getItemIndex(currentItem) + 1];
+		this.setFocusToItem(newItem);
+	}
+
+	getItemIndex(domNode) {
+		return this.menuitems.indexOf(domNode);
 	}
 
 	open() {
-		this.domNode.classList.add('m-active');
-		this.domNode.setAttribute('aria-hidden', 'false');
-		this.controller.setExpanded(true);
-
-		if (this.controller.isMenubarItem) {
-			this.controller.toggleFlyout(this.domNode.clientHeight);
-			this.controller.toggleOverlay(true);
-		}
+		this.togglePopup(true);
+		return true;
 	}
 
 	close(force) {
-		if (force === true) {
-			return this.closePopup();
+		if (force) {
+			this.togglePopup(false);
+			return true;
 		}
 
-		let hasFocusInSubmenus = this.hasFocus;
-		this.menuitems.forEach((item) => {
-			if (item.popupMenu) {
-				hasFocusInSubmenus |= item.popupMenu.hasFocus;
-			}
-		});
-		const controllerHasHover = this.controller.isMenubarItem ? this.controller.hasHover : false;
+		const hasFocusWithin = this.hasFocus || this.menuitems.some(item => item.popupMenu && item.popupMenu.hasFocus);
+		const hasHoverOnController = this.controller.isMenubarItem ? this.controller.hasHover : false;
 
-		if (!hasFocusInSubmenus && !this.hasHover && !controllerHasHover) {
-			this.closePopup();
+		if (!hasFocusWithin && !this.hasHover && !hasHoverOnController) {
+			this.togglePopup(false);
+			return true;
 		}
+
+		return false;
 	}
 
-	closePopup() {
-		this.domNode.classList.remove('m-active');
-		this.domNode.setAttribute('aria-hidden', 'true');
-		this.controller.setExpanded(false);
-
-		if (this.controller.isMenubarItem) {
-			this.controller.toggleFlyout(0);
-			this.controller.toggleOverlay(false);
-		}
+	togglePopup(isOpen) {
+		this.domNode.classList.toggle(this.cssClassNames.open, isOpen);
+		this.domNode.setAttribute('aria-hidden', !isOpen);
+		this.controller.setExpanded(isOpen);
 	}
 
 	destroy() {
@@ -161,7 +157,7 @@ export default class PopupMenu {
 		this.menuitems.forEach(item => item.destroy());
 	}
 
-	static checkRequiredStructure(domNode) {
+	static validateStructure(domNode) {
 		const msgPrefix = 'PopupMenu constructor argument domNode ';
 
 		// Check whether menubarNode is a DOM element

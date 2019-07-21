@@ -9,9 +9,7 @@ export default class Menubar {
 	 * https://www.w3.org/TR/wai-aria-practices/#menu
 	 */
 	constructor(domNode) {
-		Menubar.checkRequiredStructure(domNode);
-
-		this.isMenubar = true;
+		Menubar.validateStructure(domNode);
 		this.domNode = domNode;
 
 		this.menubarItems = [];
@@ -26,13 +24,23 @@ export default class Menubar {
 
 		this.body = document.body;
 		this.flyout = this.domNode.querySelector('[data-js-menu-flyout-pane]');
+
+		this.cssClassNames = {
+			hover: '_hover'
+		};
 	}
 
 	init() {
+		this.setUpMenuItems();
+		if (this.menubarItems.length <= 0) {
+			return;
+		}
 		this.initEventListeners();
+		this.setFirstAndLastItems();
+		this.firstItem.domNode.tabIndex = 0;
+	}
 
-		// Traverse the element children of menubarNode: configure each with
-		// menuitem role behavior and store reference in menuitems array.
+	setUpMenuItems() {
 		let elem = this.domNode.firstElementChild;
 
 		while (elem) {
@@ -46,15 +54,12 @@ export default class Menubar {
 
 			elem = elem.nextElementSibling;
 		}
+	}
 
-		// Use populated menuitems array to initialize firstItem and lastItem.
+	setFirstAndLastItems() {
 		const numItems = this.menubarItems.length;
-		if (numItems > 0) {
-			// eslint-disable-next-line prefer-destructuring
-			this.firstItem = this.menubarItems[0];
-			this.lastItem = this.menubarItems[numItems - 1];
-		}
-		this.firstItem.domNode.tabIndex = 0;
+		this.firstItem = this.menubarItems[0];
+		this.lastItem = this.menubarItems[numItems - 1];
 	}
 
 	initEventListeners() {
@@ -68,6 +73,14 @@ export default class Menubar {
 	handleMouseEnter() {
 		const setIntentionalHover = () => {
 			this.hasHover = true;
+			this.menubarItems.forEach((barItem) => {
+				if (barItem.hasHover) {
+					barItem.domNode.classList.add(this.cssClassNames.hover);
+				}
+				if (barItem.hasHover && barItem.popupMenu) {
+					barItem.popupMenu.open();
+				}
+			});
 		};
 		this.timeout = setTimeout(setIntentionalHover, this.activationDelay);
 	}
@@ -78,13 +91,12 @@ export default class Menubar {
 	}
 
 	setFocusToItem(newItem) {
-		let hasAlreadyExpandedItem = false;
+		let hasOpenedMenu = false; // open menu if bar has already opened menu
 
 		this.menubarItems.forEach((barItem) => {
-			if (barItem.domNode.tabIndex === 0) {
-				hasAlreadyExpandedItem = barItem.domNode.getAttribute('aria-expanded') === 'true';
+			if (barItem.isPopUpExpanded) {
+				hasOpenedMenu = true;
 			}
-
 			barItem.domNode.tabIndex = -1;
 			if (barItem.popupMenu) {
 				barItem.popupMenu.close(true);
@@ -94,7 +106,7 @@ export default class Menubar {
 		newItem.domNode.focus();
 		newItem.domNode.tabIndex = 0;
 
-		if (hasAlreadyExpandedItem && newItem.popupMenu) {
+		if (hasOpenedMenu && newItem.popupMenu) {
 			newItem.popupMenu.open();
 		}
 	}
@@ -108,59 +120,38 @@ export default class Menubar {
 	}
 
 	setFocusToPreviousItem(currentItem) {
-		let newItem;
-
-		if (currentItem === this.firstItem) {
-			newItem = this.lastItem;
-		} else {
-			const index = this.menubarItems.indexOf(currentItem);
-			newItem = this.menubarItems[index - 1];
-		}
-
+		const newItem = (currentItem === this.firstItem) ? this.lastItem
+			: this.menubarItems[this.getElementIndex(currentItem) - 1];
 		this.setFocusToItem(newItem);
 	}
 
 	setFocusToNextItem(currentItem) {
-		let newItem;
-
-		if (currentItem === this.lastItem) {
-			newItem = this.firstItem;
-		} else {
-			const index = this.menubarItems.indexOf(currentItem);
-			newItem = this.menubarItems[index + 1];
-		}
-
+		const newItem = (currentItem === this.lastItem) ? this.firstItem
+			: this.menubarItems[this.getElementIndex(currentItem) + 1];
 		this.setFocusToItem(newItem);
 	}
 
-	toggleOverlay(isOpen) {
-		//if (isOpen) {
-		//	window.globalOverlay.open('m-partial');
-		//} else {
-		//	window.globalOverlay.close();
-		//}
+	getElementIndex(domNode) {
+		return this.menubarItems.indexOf(domNode);
 	}
 
 	toggleFlyout(height) {
 		const flyoutStyles = this.flyout.style;
-
 		if (height === 0) {
 			flyoutStyles.opacity = 0;
-			flyoutStyles.visibility = 'none';
-			flyoutStyles.height = '40vh';
+			flyoutStyles.height = '10vh';
+			flyoutStyles.visibility = 'hidden';
 
-			clearTimeout(this.flyoutTimer);
-			this.flyoutTimer = setTimeout(() => {
-				flyoutStyles.display = 'none';
-			}, 300);
+			//window.partialOverlay.close();
 		} else {
 			clearTimeout(this.flyoutTimer);
 			const topPosition = window.scrollY ? window.scrollY : window.pageYOffset;
 			flyoutStyles.top = `${parseInt(this.domNode.getBoundingClientRect().bottom + topPosition, 10)}px`;
 			flyoutStyles.opacity = 1;
-			flyoutStyles.display = 'block';
-			flyoutStyles.visibility = 'visible';
 			flyoutStyles.height = `${height + 4}px`;
+			flyoutStyles.visibility = 'visible';
+
+			//window.partialOverlay.open();
 		}
 	}
 
@@ -186,7 +177,7 @@ export default class Menubar {
 		});
 	}
 
-	static checkRequiredStructure(domNode) {
+	static validateStructure(domNode) {
 		const msgPrefix = 'Menubar constructor argument menubarNode ';
 
 		// Check whether menubarNode is a DOM element

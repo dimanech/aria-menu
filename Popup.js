@@ -29,7 +29,7 @@ export default class Popup {
 			LEFT: 37,
 			UP: 38,
 			RIGHT: 39,
-			DOWN: 40,
+			DOWN: 40
 		});
 	}
 
@@ -66,7 +66,7 @@ export default class Popup {
 		const buttonCenter = this.domNode.offsetLeft + (this.domNode.clientWidth / 2);
 
 		this.popupMenu.domNode.style.top = `${buttonBottom + 14}px`;
-		this.popupMenu.domNode.querySelector('.b-popup_menu-tail').style.left = `${buttonCenter}px`;
+		this.popupMenu.domNode.querySelector('.popup-menu__tail').style.left = `${buttonCenter}px`;
 	}
 
 	handleKeydown(event) {

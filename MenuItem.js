@@ -7,11 +7,14 @@ export default class MenuItem {
 	constructor(domNode, menuObj) {
 		this.domNode = domNode;
 		this.menu = menuObj;
-		this.isMenubarItem = false;
 
 		this.blurHandledByController = false;
 
-		this.timeout = 60;
+		this.timeout = 20;
+
+		this.cssClassNames = {
+			active: '_active'
+		};
 
 		this.keyCode = Object.freeze({
 			TAB: 9,
@@ -25,7 +28,7 @@ export default class MenuItem {
 			LEFT: 37,
 			UP: 38,
 			RIGHT: 39,
-			DOWN: 40,
+			DOWN: 40
 		});
 	}
 
@@ -90,12 +93,12 @@ export default class MenuItem {
 
 			case this.keyCode.ESC:
 				this.menu.setFocusToController();
-				this.menu.close(true);
 				preventEventActions = true;
 				break;
 
 			case this.keyCode.TAB:
 				this.menu.setFocusToController();
+				preventEventActions = true;
 				break;
 
 			default:
@@ -109,23 +112,21 @@ export default class MenuItem {
 	}
 
 	handleKeyReturn(event) {
-		let clickEvent;
 		// Create simulated mouse event to mimic the behavior of ATs
 		// and let the event handler handleClick do the housekeeping.
-		try {
+		let clickEvent;
+		if (typeof MouseEvent === 'function') {
 			clickEvent = new MouseEvent('click', {
 				view: window,
 				bubbles: true,
-				cancelable: true,
+				cancelable: true
 			});
-		} catch (err) {
-			if (document.createEvent) {
-				// DOM Level 3 for IE 9+
-				clickEvent = document.createEvent('MouseEvents');
-				clickEvent.initEvent('click', true, true);
-			}
+		} else if (document.createEvent) { // IE11<
+			clickEvent = document.createEvent('MouseEvents');
+			clickEvent.initEvent('click', true, true);
 		}
 		event.currentTarget.dispatchEvent(clickEvent);
+		event.currentTarget.classList.add(this.cssClassNames.active);
 	}
 
 	handleKeyRight() {
@@ -139,8 +140,7 @@ export default class MenuItem {
 	}
 
 	handleClick() {
-		this.menu.setFocusToController();
-		this.menu.close(true);
+		this.domNode.classList.add(this.cssClassNames.active);
 	}
 
 	handleFocus() {
@@ -149,9 +149,15 @@ export default class MenuItem {
 
 	handleBlur() {
 		this.menu.hasFocus = false;
+		this.domNode.tabIndex = -1;
+
 		if (!this.blurHandledByController) {
-			setTimeout(this.menu.close.bind(this.menu, false), this.timeout);
+			setTimeout(() => this.menu.close(), this.timeout);
+			// We need this timeout to handle keyboard interaction between components.
+			// When it blur some other will set focus. This checked in Menu.close. If no one
+			// gained focus we close menu
 		}
+		this.blurHandledByController = false;
 	}
 
 	destroy() {

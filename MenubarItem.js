@@ -7,15 +7,22 @@ export default class MenubarItem {
 	 * https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
 	 */
 	constructor(domNode, menuObj) {
-		this.menu = menuObj;
+		this.isMenubarItem = true;
+		this.menuBar = menuObj;
 		this.domNode = domNode;
-		this.popupMenu = false;
+		this.wrapper = this.domNode.parentNode; // we need this to not deal with
+		// timeouts for hovering from separate button to menu. This is not robust.
+		this.popupMenu = null;
 
 		this.hasFocus = false;
 		this.hasHover = false;
+		this.isPopUpExpanded = false;
 
-		this.isMenubarItem = true;
-		this.timeout = 60;
+		this.mouseOutTimeout = 30;
+
+		this.cssClassNames = {
+			hover: '_hover'
+		};
 
 		this.keyCode = Object.freeze({
 			TAB: 9,
@@ -29,7 +36,7 @@ export default class MenubarItem {
 			LEFT: 37,
 			UP: 38,
 			RIGHT: 39,
-			DOWN: 40,
+			DOWN: 40
 		});
 	}
 
@@ -55,11 +62,11 @@ export default class MenubarItem {
 		this.domNode.addEventListener('keydown', this.handleKeydown);
 		this.domNode.addEventListener('focus', this.handleFocus);
 		this.domNode.addEventListener('blur', this.handleBlur);
-		this.domNode.addEventListener('mouseenter', this.handleMouseover);
-		this.domNode.addEventListener('mouseleave', this.handleMouseout);
+		this.wrapper.addEventListener('mouseenter', this.handleMouseover);
+		this.wrapper.addEventListener('mouseleave', this.handleMouseout);
 	}
 
-	handleKeydown(event) {
+	handleKeydown(event) { // eslint-disable-line complexity
 		let preventEventActions = false;
 
 		switch (event.keyCode) {
@@ -68,38 +75,38 @@ export default class MenubarItem {
 			case this.keyCode.DOWN:
 				if (this.popupMenu) {
 					this.popupMenu.open();
-					this.popupMenu.setFocusToFirstItem();
+					this.popupMenu.setFocusToFirstItem(); // NB. This will not work on transformed elements
 					preventEventActions = true;
 				}
 				break;
 
 			case this.keyCode.LEFT:
-				this.menu.setFocusToPreviousItem(this);
+				this.menuBar.setFocusToPreviousItem(this);
 				preventEventActions = true;
 				break;
 
 			case this.keyCode.RIGHT:
-				this.menu.setFocusToNextItem(this);
+				this.menuBar.setFocusToNextItem(this);
 				preventEventActions = true;
 				break;
 
 			case this.keyCode.UP:
 				if (this.popupMenu) {
 					this.popupMenu.open();
-					this.popupMenu.setFocusToLastItem();
+					this.popupMenu.setFocusToLastItem(); // NB. This will not work on transformed elements
 					preventEventActions = true;
 				}
 				break;
 
 			case this.keyCode.HOME:
 			case this.keyCode.PAGEUP:
-				this.menu.setFocusToFirstItem();
+				this.menuBar.setFocusToFirstItem();
 				preventEventActions = true;
 				break;
 
 			case this.keyCode.END:
 			case this.keyCode.PAGEDOWN:
-				this.menu.setFocusToLastItem();
+				this.menuBar.setFocusToLastItem();
 				preventEventActions = true;
 				break;
 
@@ -126,48 +133,47 @@ export default class MenubarItem {
 	}
 
 	setExpanded(isExpanded) {
-		this.domNode.setAttribute('aria-expanded', isExpanded.toString());
+		this.domNode.setAttribute('aria-expanded', isExpanded);
+		this.isPopUpExpanded = isExpanded;
+
+		if (isExpanded) {
+			const contentHeight = this.popupMenu.domNode.clientHeight;
+			this.menuBar.toggleFlyout(contentHeight);
+		} else {
+			this.menuBar.toggleFlyout(0);
+		}
 	}
 
 	handleFocus() {
-		this.menu.hasFocus = true;
+		this.menuBar.hasFocus = true;
 	}
 
 	handleBlur() {
-		this.menu.hasFocus = false;
+		this.menuBar.hasFocus = false;
 	}
 
 	handleMouseover() {
 		if (this.hasHover) {
 			return;
 		}
+
 		this.hasHover = true;
-		const openMenu = () => {
-			if (this.menu.hasHover && this.hasHover) {
-				if (this.popupMenu) {
-					setTimeout(this.popupMenu.open.bind(this.popupMenu, false), this.timeout);
-				}
-				clearTimeout(secondChance);
-			}
-		};
-		// ensure that user still here to avoid quick hover into the link lags
-		const secondChance = setTimeout(openMenu, this.menu.activationDelay + 30);
-		openMenu();
+		if (this.menuBar.hasHover && this.popupMenu) {
+			// Need timeout to improve UX
+			setTimeout(() => this.popupMenu.open(), this.mouseOutTimeout);
+		}
+		if (this.menuBar.hasHover) {
+			this.domNode.classList.add(this.cssClassNames.hover);
+		}
 	}
 
 	handleMouseout() {
 		this.hasHover = false;
 		if (this.popupMenu) {
-			setTimeout(this.popupMenu.close.bind(this.popupMenu, false), this.timeout);
+			// fired twice since menu also handle mouseout and close menu
+			setTimeout(() => this.popupMenu.close(), this.mouseOutTimeout);
 		}
-	}
-
-	toggleFlyout(height) {
-		this.menu.toggleFlyout(height);
-	}
-
-	toggleOverlay(isOpen) {
-		this.menu.toggleOverlay(isOpen);
+		this.domNode.classList.remove(this.cssClassNames.hover);
 	}
 
 	destroy() {
