@@ -1,6 +1,6 @@
-import MenubarItem from './MenubarItem.js';
+import MenuBarPopup from './MenuBarPopup.js';
 
-export default class Menubar {
+export default class MenuBar {
 	/*
 	 * This content is based on w3.org design pattern examples and licensed according to the
 	 * W3C Software License at
@@ -9,7 +9,6 @@ export default class Menubar {
 	 * https://www.w3.org/TR/wai-aria-practices/#menu
 	 */
 	constructor(domNode) {
-		Menubar.validateStructure(domNode);
 		this.domNode = domNode;
 
 		this.menubarItems = [];
@@ -22,15 +21,13 @@ export default class Menubar {
 
 		this.activationDelay = 500;
 
-		this.body = document.body;
-		this.flyout = this.domNode.querySelector('[data-js-menu-flyout-pane]');
+		this.flyout = this.domNode.querySelector('[data-elem-menu-flyout-pane]');
 
-		this.cssClassNames = {
-			hover: '_hover'
-		};
+		this.cssClassHover = '_hover';
 	}
 
 	init() {
+		this.domNode.setAttribute('role', 'menubar');
 		this.setUpMenuItems();
 		if (this.menubarItems.length <= 0) {
 			return;
@@ -46,8 +43,8 @@ export default class Menubar {
 		while (elem) {
 			const menuElement = elem.firstElementChild;
 
-			if (elem && menuElement && menuElement.tagName === 'A') {
-				const menubarItem = new MenubarItem(menuElement, this);
+			if (elem && menuElement && menuElement.getAttribute('role') === 'menuitem') {
+				const menubarItem = new MenuBarPopup(menuElement, this);
 				menubarItem.init();
 				this.menubarItems.push(menubarItem);
 			}
@@ -70,23 +67,28 @@ export default class Menubar {
 		this.domNode.addEventListener('mouseleave', this.handleMouseLeave);
 	}
 
+	removeEventListeners() {
+		this.domNode.removeEventListener('mouseenter', this.handleMouseEnter);
+		this.domNode.removeEventListener('mouseleave', this.handleMouseLeave);
+	}
+
 	handleMouseEnter() {
 		const setIntentionalHover = () => {
 			this.hasHover = true;
 			this.menubarItems.forEach((barItem) => {
 				if (barItem.hasHover) {
-					barItem.domNode.classList.add(this.cssClassNames.hover);
+					barItem.domNode.classList.add(this.cssClassHover);
 				}
 				if (barItem.hasHover && barItem.popupMenu) {
 					barItem.popupMenu.open();
 				}
 			});
 		};
-		this.timeout = setTimeout(setIntentionalHover, this.activationDelay);
+		this.hoverOverTimeout = setTimeout(setIntentionalHover, this.activationDelay);
 	}
 
 	handleMouseLeave() {
-		clearTimeout(this.timeout);
+		clearTimeout(this.hoverOverTimeout);
 		this.hasHover = false;
 	}
 
@@ -141,63 +143,22 @@ export default class Menubar {
 			flyoutStyles.opacity = 0;
 			flyoutStyles.height = '10vh';
 			flyoutStyles.visibility = 'hidden';
-
-			//window.partialOverlay.close();
 		} else {
-			clearTimeout(this.flyoutTimer);
 			const topPosition = window.scrollY ? window.scrollY : window.pageYOffset;
 			flyoutStyles.top = `${parseInt(this.domNode.getBoundingClientRect().bottom + topPosition, 10)}px`;
 			flyoutStyles.opacity = 1;
 			flyoutStyles.height = `${height + 4}px`;
 			flyoutStyles.visibility = 'visible';
-
-			//window.partialOverlay.open();
 		}
 	}
 
 	destroy() {
-		this.domNode.removeEventListener('mouseenter', this.handleMouseEnter);
-		this.domNode.removeEventListener('mouseleave', this.handleMouseLeave);
+		this.domNode.removeAttribute('role');
+		this.removeEventListeners();
+		clearTimeout(this.hoverOverTimeout);
 		this.menubarItems.forEach((item) => {
 			item.domNode.tabIndex = 0;
 			item.destroy();
 		});
 	}
-
-	initRoles() {
-		this.domNode.setAttribute('role', 'menubar');
-		this.domNode.childs.forEach((child) => {
-			if (child.tagName === 'LI') {
-				child.setAttribute('role', 'none');
-			}
-			if (child.tagName === 'A') {
-				child.setAttribute('role', 'menuitem');
-				child.setAttribute('tabindex', 0);
-			}
-		});
-	}
-
-	static validateStructure(domNode) {
-		const msgPrefix = 'Menubar constructor argument menubarNode ';
-
-		// Check whether menubarNode is a DOM element
-		if (!(domNode instanceof Element)) {
-			throw new TypeError(`${msgPrefix} is not a DOM Element.`);
-		}
-
-		// Check whether menubarNode has descendant elements
-		if (domNode.childElementCount === 0) {
-			throw new Error(`${msgPrefix} has no element children.`);
-		}
-
-		// Check whether menubarNode has A elements
-		let menuElement = domNode.firstElementChild;
-		while (menuElement) {
-			const menubarItem = menuElement.firstElementChild;
-			if (menuElement && menubarItem && menubarItem.tagName !== 'A') {
-				throw new Error(`${msgPrefix} has child elements are not A elements.`);
-			}
-			menuElement = menuElement.nextElementSibling;
-		}
-	}
-};
+}

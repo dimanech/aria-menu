@@ -1,3 +1,18 @@
+const keyCode = Object.freeze({
+	TAB: 9,
+	RETURN: 13,
+	ESC: 27,
+	SPACE: 32,
+	PAGEUP: 33,
+	PAGEDOWN: 34,
+	END: 35,
+	HOME: 36,
+	LEFT: 37,
+	UP: 38,
+	RIGHT: 39,
+	DOWN: 40
+});
+
 export default class MenuItem {
 	/*
 	 * This content is based on w3.org design pattern examples and licensed according to the
@@ -5,31 +20,16 @@ export default class MenuItem {
 	 * https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
 	 */
 	constructor(domNode, menuObj) {
-		this.domNode = domNode;
+		this.domNode = domNode; // needed to access host node from parent componetn
 		this.menu = menuObj;
 
 		this.blurHandledByController = false;
 
+		this.hasSubMenu = this.domNode.hasAttribute('aria-haspopup');
+
 		this.timeout = 20;
 
-		this.cssClassNames = {
-			active: '_active'
-		};
-
-		this.keyCode = Object.freeze({
-			TAB: 9,
-			RETURN: 13,
-			ESC: 27,
-			SPACE: 32,
-			PAGEUP: 33,
-			PAGEDOWN: 34,
-			END: 35,
-			HOME: 36,
-			LEFT: 37,
-			UP: 38,
-			RIGHT: 39,
-			DOWN: 40
-		});
+		this.cssClassActive = '_active';
 	}
 
 	init() {
@@ -49,56 +49,62 @@ export default class MenuItem {
 		this.domNode.addEventListener('blur', this.handleBlur);
 	}
 
+	removeEventListeners() {
+		this.domNode.removeEventListener('keydown', this.handleKeydown);
+		this.domNode.removeEventListener('click', this.handleClick);
+		this.domNode.removeEventListener('focus', this.handleFocus);
+		this.domNode.removeEventListener('blur', this.handleBlur);
+	}
+
 	handleKeydown(event) {
 		let preventEventActions = false;
 
 		switch (event.keyCode) {
-			case this.keyCode.SPACE:
-			case this.keyCode.RETURN:
+			case keyCode.SPACE:
+			case keyCode.RETURN:
 				this.handleKeyReturn(event);
 				preventEventActions = true;
 				break;
 
-			case this.keyCode.UP:
+			case keyCode.UP:
 				this.menu.setFocusToPreviousItem(this);
 				preventEventActions = true;
 				break;
 
-			case this.keyCode.DOWN:
+			case keyCode.DOWN:
 				this.menu.setFocusToNextItem(this);
 				preventEventActions = true;
 				break;
 
-			case this.keyCode.LEFT:
+			case keyCode.LEFT:
 				this.handleKeyLeft();
 				preventEventActions = true;
 				break;
 
-			case this.keyCode.RIGHT:
+			case keyCode.RIGHT:
 				this.handleKeyRight();
 				preventEventActions = true;
 				break;
 
-			case this.keyCode.HOME:
-			case this.keyCode.PAGEUP:
+			case keyCode.HOME:
+			case keyCode.PAGEUP:
 				this.menu.setFocusToFirstItem();
 				preventEventActions = true;
 				break;
 
-			case this.keyCode.END:
-			case this.keyCode.PAGEDOWN:
+			case keyCode.END:
+			case keyCode.PAGEDOWN:
 				this.menu.setFocusToLastItem();
 				preventEventActions = true;
 				break;
 
-			case this.keyCode.ESC:
+			case keyCode.TAB:
 				this.menu.setFocusToController();
 				preventEventActions = true;
 				break;
 
-			case this.keyCode.TAB:
+			case keyCode.ESC:
 				this.menu.setFocusToController();
-				preventEventActions = true;
 				break;
 
 			default:
@@ -114,33 +120,32 @@ export default class MenuItem {
 	handleKeyReturn(event) {
 		// Create simulated mouse event to mimic the behavior of ATs
 		// and let the event handler handleClick do the housekeeping.
-		let clickEvent;
-		if (typeof MouseEvent === 'function') {
-			clickEvent = new MouseEvent('click', {
-				view: window,
-				bubbles: true,
-				cancelable: true
-			});
-		} else if (document.createEvent) { // IE11<
-			clickEvent = document.createEvent('MouseEvents');
-			clickEvent.initEvent('click', true, true);
-		}
+		const clickEvent = new MouseEvent('click', {
+			view: window,
+			bubbles: true,
+			cancelable: true
+		});
 		event.currentTarget.dispatchEvent(clickEvent);
-		event.currentTarget.classList.add(this.cssClassNames.active);
+		event.currentTarget.classList.add(this.cssClassActive);
 	}
 
 	handleKeyRight() {
 		this.blurHandledByController = true; // blur and close handled in parent
-		this.menu.setFocusToController('next');
+		this.menu.setFocusToController('next', this);
 	}
 
 	handleKeyLeft() {
 		this.blurHandledByController = true;
-		this.menu.setFocusToController('previous');
+		this.menu.setFocusToController('previous', this);
 	}
 
-	handleClick() {
-		this.domNode.classList.add(this.cssClassNames.active);
+	handleClick(event) {
+		this.domNode.classList.add(this.cssClassActive);
+		// TODO: do we need change hasFocus?
+		if (this.hasSubMenu && typeof this.menu.menuItemClick === 'function') {
+			event.preventDefault();
+			this.menu.menuItemClick(this);
+		}
 	}
 
 	handleFocus() {
@@ -161,11 +166,7 @@ export default class MenuItem {
 	}
 
 	destroy() {
+		this.removeEventListeners();
 		this.domNode.tabIndex = 0;
-
-		this.domNode.removeEventListener('keydown', this.handleKeydown);
-		this.domNode.removeEventListener('click', this.handleClick);
-		this.domNode.removeEventListener('focus', this.handleFocus);
-		this.domNode.removeEventListener('blur', this.handleBlur);
 	}
-};
+}

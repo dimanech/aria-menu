@@ -1,4 +1,5 @@
-import Menubar from './Menubar.js';
+import MenuBar from './MenuBar.js';
+import MenuPanel from './MenuPanel.js';
 import Popup from './Popup.js';
 
-export { Menubar, Popup };
+export { MenuBar, MenuPanel, Popup };

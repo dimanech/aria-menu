@@ -1,5 +1,14 @@
 import PopupMenu from './PopupMenu.js';
 
+const keyCode = Object.freeze({
+	TAB: 9,
+	RETURN: 13,
+	ESC: 27,
+	SPACE: 32,
+	UP: 38,
+	DOWN: 40
+});
+
 export default class Popup {
 	/*
 	 * This content is based on w3.org design pattern examples and licensed according to the
@@ -7,7 +16,8 @@ export default class Popup {
 	 * https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
 	 */
 	constructor(domNode) {
-		this.domNode = domNode;
+		this.domNode = domNode; // need to call node from child
+		this.popupButton = this.domNode;
 		this.popupMenu = false;
 
 		this.isMenubarItem = false;
@@ -15,29 +25,15 @@ export default class Popup {
 		this.hasFocus = false;
 		this.hasHover = false;
 
-		this.timeout = 90;
-
-		this.keyCode = Object.freeze({
-			TAB: 9,
-			RETURN: 13,
-			ESC: 27,
-			SPACE: 32,
-			PAGEUP: 33,
-			PAGEDOWN: 34,
-			END: 35,
-			HOME: 36,
-			LEFT: 37,
-			UP: 38,
-			RIGHT: 39,
-			DOWN: 40
-		});
+		this.closeDelay = 90;
+		this.animationsDuration = 200;
 	}
 
 	init() {
 		this.initEventListeners();
+		const controlledElement = document.getElementById(this.popupButton.getAttribute('aria-controls'));
 
-		const menu = document.getElementById(this.domNode.getAttribute('aria-controls'));
-		this.popupMenu = new PopupMenu(menu, this);
+		this.popupMenu = new PopupMenu(controlledElement, this);
 		this.popupMenu.init();
 
 		this.setPopupPosition();
@@ -50,20 +46,28 @@ export default class Popup {
 		this.handleMouseenter = this.handleMouseenter.bind(this);
 		this.handleMouseleave = this.handleMouseleave.bind(this);
 
-		this.domNode.addEventListener('keydown', this.handleKeydown);
-		this.domNode.addEventListener('focus', this.handleFocus);
-		this.domNode.addEventListener('blur', this.handleBlur);
-		this.domNode.addEventListener('mouseenter', this.handleMouseenter);
-		this.domNode.addEventListener('mouseleave', this.handleMouseleave);
+		this.popupButton.addEventListener('mouseenter', this.handleMouseenter);
+		this.popupButton.addEventListener('mouseleave', this.handleMouseleave);
+		this.popupButton.addEventListener('keydown', this.handleKeydown);
+		this.popupButton.addEventListener('focus', this.handleFocus);
+		this.popupButton.addEventListener('blur', this.handleBlur);
 	}
 
-	setExpanded(isExpanded) {
-		this.domNode.setAttribute('aria-expanded', isExpanded.toString());
+	removeEventListeners() {
+		this.popupButton.removeEventListener('mouseenter', this.handleMouseenter);
+		this.popupButton.removeEventListener('mouseleave', this.handleMouseleave);
+		this.popupButton.removeEventListener('keydown', this.handleKeydown);
+		this.popupButton.removeEventListener('focus', this.handleFocus);
+		this.popupButton.removeEventListener('blur', this.handleBlur);
+	}
+
+	toggleExpanded(isExpanded) {
+		this.popupButton.setAttribute('aria-expanded', isExpanded);
 	}
 
 	setPopupPosition() {
-		const buttonBottom = this.domNode.offsetTop + this.domNode.clientHeight;
-		const buttonCenter = this.domNode.offsetLeft + (this.domNode.clientWidth / 2);
+		const buttonBottom = this.popupButton.offsetTop + this.popupButton.clientHeight;
+		const buttonCenter = this.popupButton.offsetLeft + (this.popupButton.clientWidth / 2);
 
 		this.popupMenu.domNode.style.top = `${buttonBottom + 14}px`;
 		this.popupMenu.domNode.querySelector('.popup-menu__tail').style.left = `${buttonCenter}px`;
@@ -73,22 +77,22 @@ export default class Popup {
 		let preventEventActions = false;
 
 		switch (event.keyCode) {
-			case this.keyCode.SPACE:
-			case this.keyCode.RETURN:
-			case this.keyCode.DOWN:
+			case keyCode.SPACE:
+			case keyCode.RETURN:
+			case keyCode.DOWN:
 				this.popupMenu.open();
-				this.popupMenu.setFocusToFirstItem();
+				this.timeout = setTimeout(() => this.popupMenu.setFocusToFirstItem(), this.animationsDuration);
 				preventEventActions = true;
 				break;
 
-			case this.keyCode.UP:
+			case keyCode.UP:
 				this.popupMenu.open();
-				this.popupMenu.setFocusToLastItem();
+				this.timeout = setTimeout(() => this.popupMenu.setFocusToLastItem, this.animationsDuration);
 				preventEventActions = true;
 				break;
 
-			case this.keyCode.TAB:
-			case this.keyCode.ESC:
+			case keyCode.TAB:
+			case keyCode.ESC:
 				this.popupMenu.close(true);
 				break;
 
@@ -115,7 +119,7 @@ export default class Popup {
 				this.popupMenu.close();
 			}
 		};
-		setTimeout(closePopup, this.timeout);
+		this.timeout = setTimeout(closePopup, this.closeDelay);
 	}
 
 	handleFocus() {
@@ -129,15 +133,12 @@ export default class Popup {
 				this.popupMenu.close();
 			}
 		};
-		setTimeout(closePopup, this.timeout);
+		this.timeout = setTimeout(closePopup, this.closeDelay);
 	}
 
 	destroy() {
-		this.domNode.removeEventListener('mouseenter', this.handleMouseenter);
-		this.domNode.removeEventListener('mouseleave', this.handleMouseleave);
-		this.domNode.removeEventListener('keydown', this.handleKeydown);
-		this.domNode.removeEventListener('focus', this.handleFocus);
-		this.domNode.removeEventListener('blur', this.handleBlur);
+		this.removeEventListeners();
+		clearTimeout(this.timeout);
 		this.popupMenu.destroy();
 	}
-};
+}

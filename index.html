@@ -1,19 +1,26 @@
-<html>
+<html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
-	<title>ARIA 1.1 Menubar/Popup example</title>
-	<link rel="stylesheet" href="menu.css" />
+	<title>Menus example</title>
+	<link rel="stylesheet" href="css/menus.css"/>
 </head>
 <body>
-	
-	<header>
+	<header style="background-color: white; box-shadow: 0 0 20px rgba(0,0,0,0.5)">
 		<nav class="utility-menu">
 			<div class="utility-menu__inner">
 				<div class="utility-menu__item">
 					<button
-						data-js-popup-button
+						class="menu-bar-toggle"
+						data-elem-hamburger-open
+						aria-haspopup="true"
+						aria-controls="main-menu"
+					>
+						Hamburger
+					</button>
+					<button
+						data-component="Popup"
 						id="account-menu-button"
 						aria-haspopup="true"
 						aria-controls="account-popup-menu"
@@ -38,7 +45,7 @@
 				</div>
 				<div class="utility-menu__item">
 					<button
-						data-js-popup-button
+						data-component="Popup"
 						id="orders-menu-button"
 						aria-haspopup="true"
 						aria-controls="orders-popup-menu"
@@ -63,256 +70,268 @@
 				</div>
 			</div>
 		</nav>
-		
-		<nav
-			role="navigation"
-			class="menu-bar"
-			data-js-nav
-			aria-label="Main menu"
-			itemscope=""
-			itemtype="http://www.schema.org/SiteNavigationElement"
+
+		<!-- Main menu: MenuBar to MenuPanel -->
+		<div
+			id="main-menu"
+			class="menu-panel"
+			data-component="MainMenu"
+			data-elem-menu-panel
 		>
-			<ul
-				role="menubar"
-				class="menu-bar__inner"
-				data-js-menu-bar
-			>
-				<li role="none" class="menu-bar__item">
-					<a
-						role="menuitem"
-						class="menu-bar__link _level-1"
-						aria-haspopup="true"
-						aria-expanded="false"
-						itemprop="url"
-						href="./menu-a.html"
-					>
-						<span itemprop="name">Menu A</span>
-					</a>
-					<div role="menu" class="menu-bar__popup" data-js-nav-flyout>
-						<ul class="menu-bar__popup-inner">
-							<li role="none" class="menu-bar__submenu-item">
-								<a
-									role="menuitem"
-									class="menu-bar__link _level-2"
-									itemprop="url"
-									href="/menu-a-i.html"
-								>
-									<span itemprop="name">Menu A I</span>
-								</a>
-							</li>
-							<li role="none" class="menu-bar__submenu-item">
-								<a
-									role="menuitem"
-									class="menu-bar__link _level-2"
-									itemprop="url"
-									href="/menu-a-ii.html"
-								>
-									<span itemprop="name">Menu A II</span>
-								</a>
-							</li>
-							<li role="none" class="menu-bar__submenu-item">
-								<a
-									role="menuitem"
-									class="menu-bar__link _level-2"
-									itemprop="url"
-									href="/menu-a-iii.html"
-								>
-									<span itemprop="name">Menu A III</span>
-								</a>
-							</li>
-						</ul>
+			<div class="menu-panel__box">
+				<div class="menu-panel__track" data-elem-hamburger-track>
+				<div class="menu-panel__panel">
+					<div class="menu-panel__header">
+						<button class="menu-panel__close" data-elem-panel-close>&times;</button>
 					</div>
-				</li>
-				<li role="none" class="menu-bar__item">
-					<a
-						role="menuitem"
-						class="menu-bar__link _level-1"
-						aria-haspopup="true"
-						aria-expanded="false"
-						itemprop="url"
-						href="./menu-b.html"
+					<nav
+						role="navigation"
+						class="menu-bar"
+						aria-label="Main menu"
+						itemscope=""
+						itemtype="http://www.schema.org/SiteNavigationElement"
 					>
-						<span itemprop="name">Menu B</span>
-					</a>
-					<div role="menu" class="menu-bar__popup" data-js-nav-flyout>
-						<ul class="menu-bar__popup-inner">
-							<li role="none" class="menu-bar__submenu-item">
+						<ul
+							class="menu-bar__inner"
+							data-elem-menu-bar
+						>
+							<li role="none" class="menu-bar__item">
 								<a
 									role="menuitem"
-									class="menu-bar__link _level-2"
-									itemprop="url"
-									href="/menu-b-i.html"
+									class="menu-bar__link _level-1"
+									aria-haspopup="true"
+									aria-expanded="false"
+									itemprop="url name"
+									href="./menu-a.html"
 								>
-									<span itemprop="name">Menu B I</span>
+									Menu 1
 								</a>
+								<div
+									role="none"
+									class="menu-bar__popup menu-panel__content _level_1"
+									data-elem-nav-flyout
+								>
+									<ul role="menu" class="menu-bar__popup-inner">
+										<li role="none" class="menu-bar__submenu-item">
+											<a
+												role="menuitem"
+												class="menu-bar__link _level-2"
+												itemprop="url name"
+												aria-haspopup="true"
+												aria-expanded="false"
+												href="/menu-a.html"
+											>
+												Menu 1-1
+											</a>
+											<div
+												role="none"
+												class="menu-bar__popup menu-panel__content _level_2"
+											>
+												<ul role="menu" class="menu-bar__popup-inner">
+													<li role="none" class="menu-bar__submenu-item">
+														<a
+															role="menuitem"
+															class="menu-bar__link _level-3"
+															itemprop="url name"
+															href="/menu-a.html"
+														>
+															Menu 1-1-1
+														</a>
+													</li>
+													<li role="none" class="menu-bar__submenu-item">
+														<a
+															role="menuitem"
+															class="menu-bar__link _level-3"
+															itemprop="url name"
+															href="/menu-a.html"
+														>
+															Menu 1-1-2
+														</a>
+													</li>
+												</ul>
+											</div>
+										</li>
+										<li role="none" class="menu-bar__submenu-item">
+											<a
+												role="menuitem"
+												class="menu-bar__link _level-2"
+												itemprop="url name"
+												href="/menu-a.html"
+											>
+												Menu 1-2
+											</a>
+										</li>
+										<li role="none" class="menu-bar__submenu-item">
+											<a
+												role="menuitem"
+												class="menu-bar__link _level-2"
+												itemprop="url name"
+												href="/menu-a.html"
+											>
+												Menu 1-3
+											</a>
+										</li>
+									</ul>
+								</div>
 							</li>
-							<li role="none" class="menu-bar__submenu-item">
+							<li role="none" class="menu-bar__item">
 								<a
 									role="menuitem"
-									class="menu-bar__link _level-2"
-									itemprop="url"
-									href="/menu-b-ii.html"
+									class="menu-bar__link _level-1"
+									aria-haspopup="true"
+									aria-expanded="false"
+									itemprop="url name"
+									href="./menu-a.html"
 								>
-									<span itemprop="name">Menu B II</span>
+									Menu 2
 								</a>
+								<div
+									role="none"
+									class="menu-bar__popup menu-panel__content _level_1"
+									data-elem-nav-flyout
+								>
+									<ul role="menu" class="menu-bar__popup-inner">
+										<li role="none" class="menu-bar__submenu-item">
+											<a
+												role="menuitem"
+												class="menu-bar__link _level-2"
+												itemprop="url name"
+												href="/menu-a.html"
+											>
+												Menu 2-1
+											</a>
+										</li>
+										<li role="none" class="menu-bar__submenu-item">
+											<a
+												role="menuitem"
+												class="menu-bar__link _level-2"
+												itemprop="url name"
+												href="/menu-a.html"
+											>
+												Menu 2-2
+											</a>
+										</li>
+										<li role="none" class="menu-bar__submenu-item">
+											<a
+												role="menuitem"
+												class="menu-bar__link _level-2"
+												itemprop="url name"
+												href="/menu-b-iii.html"
+											>
+												Menu 2-3
+											</a>
+										</li>
+										<li role="none" class="menu-bar__submenu-item">
+											<a
+												role="menuitem"
+												class="menu-bar__link _level-2"
+												itemprop="url name"
+												href="/menu-a.html"
+											>
+												Menu 2-4
+											</a>
+										</li>
+									</ul>
+								</div>
 							</li>
-							<li role="none" class="menu-bar__submenu-item">
+							<li role="none" class="menu-bar__item">
 								<a
 									role="menuitem"
-									class="menu-bar__link _level-2"
-									itemprop="url"
-									href="/menu-b-iii.html"
+									class="menu-bar__link _level-1"
+									aria-haspopup="true"
+									aria-expanded="false"
+									itemprop="url name"
+									href="./menu-a.html"
 								>
-									<span itemprop="name">Menu B III</span>
+									Menu 3
 								</a>
+								<div
+									role="none"
+									class="menu-bar__popup menu-panel__content _level_1"
+									data-elem-nav-flyout
+								>
+									<ul role="menu" class="menu-bar__popup-inner">
+										<li role="none" class="menu-bar__submenu-item">
+											<a
+												role="menuitem"
+												class="menu-bar__link _level-2"
+												itemprop="url name"
+												href="/menu-c-i.html"
+											>
+												Menu 3-1
+											</a>
+										</li>
+										<li role="none" class="menu-bar__submenu-item">
+											<a
+												role="menuitem"
+												class="menu-bar__link _level-2"
+												itemprop="url name"
+												href="/menu-c-ii.html"
+											>
+												Menu 3-2
+											</a>
+										</li>
+									</ul>
+								</div>
 							</li>
-							<li role="none" class="menu-bar__submenu-item">
+							<li role="none" class="menu-bar__item">
 								<a
 									role="menuitem"
-									class="menu-bar__link _level-2"
-									itemprop="url"
-									href="/menu-b-iv.html"
+									class="menu-bar__link _level-1"
+									itemprop="url name"
+									href="./menu-a.html"
 								>
-									<span itemprop="name">Menu B IV</span>
+									Menu 4
 								</a>
 							</li>
+							<li role="none" class="menu-bar__item">
+								<a
+									role="menuitem"
+									class="menu-bar__link _level-1"
+									itemprop="url name"
+									href="./menu-a.html"
+								>
+									Menu 5
+								</a>
+							</li>
+
+							<li
+								role="none"
+								class="menu-bar__flyout-pane"
+								data-elem-menu-flyout-pane
+							></li>
 						</ul>
+					</nav>
+				</div>
+				<div class="menu-panel__panel">
+					<div class="menu-panel__header">
+						<button data-elem-panel-back>Back</button>
+						<button class="menu-panel__close" data-elem-panel-close>&times;</button>
 					</div>
-				</li>
-				<li role="none" class="menu-bar__item">
-					<a
-						role="menuitem"
-						class="menu-bar__link _level-1"
-						aria-haspopup="true"
-						aria-expanded="false"
-						itemprop="url"
-						href="./menu-c.html"
-					>
-						<span itemprop="name">Menu C</span>
-					</a>
-					<div role="menu" class="menu-bar__popup" data-js-nav-flyout>
-						<ul class="menu-bar__popup-inner">
-							<li role="none" class="menu-bar__submenu-item">
-								<a
-									role="menuitem"
-									class="menu-bar__link _level-2"
-									itemprop="url"
-									href="/menu-c-i.html"
-								>
-									<span itemprop="name">Menu C I</span>
-								</a>
-							</li>
-							<li role="none" class="menu-bar__submenu-item">
-								<a
-									role="menuitem"
-									class="menu-bar__link _level-2"
-									itemprop="url"
-									href="/menu-c-ii.html"
-								>
-									<span itemprop="name">Menu C II</span>
-								</a>
-							</li>
-						</ul>
+					<div class="menu-panel__content" data-elem-panel-yields>
+						<button data-elem-panel-forward>Forward</button>
 					</div>
-				</li>
-				<li role="none" class="menu-bar__item">
-					<a
-						role="menuitem"
-						class="menu-bar__link _level-1"
-						itemprop="url"
-						href="./menu-d.html"
-					>
-						<span itemprop="name">Menu D</span>
-					</a>
-				</li>
-				<li role="none" class="menu-bar__item">
-					<a
-						role="menuitem"
-						class="menu-bar__link _level-1"
-						itemprop="url"
-						href="./menu-e.html"
-					>
-						<span itemprop="name">Menu E</span>
-					</a>
-				</li>
-				<li role="none" class="menu-bar__flyout-pane" data-js-menu-flyout-pane></li>
-			</ul>
-		</nav>
-	
+				</div>
+				<div class="menu-panel__panel">
+					<div class="menu-panel__header">
+						<button data-elem-panel-back>Back</button>
+						<button class="menu-panel__close" data-elem-panel-close>&times;</button>
+					</div>
+					<div class="menu-panel__content" data-elem-panel-yields></div>
+				</div>
+			</div>
+			</div>
+		</div>
+
 	</header>
-	
-	<main>
-		<a href="">Link</a>
-	</main>
-	
+
 	<script type="module">
-		import { Menubar } from './index.js';
-		//import Hamburger from './HamburgerMenu.js'
-		
-		const mobileNav = document.querySelector('[data-js-nav]');
-		const desktopNav = document.querySelector('[data-js-menu-bar]');
-		
-		if (mobileNav && desktopNav) {
-			const bar = new Menubar(desktopNav);
-			//const hamburger = new Hamburger(mobileNav);
-			
-			let isBarInited = false;
-			let isHamburgerInited = false;
-			const initBar = () => {
-				bar.init();
-				isBarInited = true;
-			};
-			const initHamburger = () => {
-				//hamburger.init();
-				isHamburgerInited = true;
-			};
-			
-			let lastBreakpoint;
-			const getBreakpoint = () => {
-				const isDesktop = (window.innerWidth >= 1024);
-				const currentBreakpoint = isDesktop ? 'desktop' : 'mobile';
-				
-				if (currentBreakpoint === lastBreakpoint) {
-					return '';
-				}
-				lastBreakpoint = currentBreakpoint;
-				return currentBreakpoint;
-			};
-			
-			const toggleNavigation = () => {
-				const breakP = getBreakpoint();
-				
-				if (breakP === 'desktop') {
-					if (isHamburgerInited) {
-						//hamburger.destroy();
-					}
-					initBar();
-				}
-				
-				if (breakP === 'mobile') {
-					if (isBarInited) {
-						bar.destroy();
-					}
-					initHamburger();
-				}
-			};
-			
-			if (window.innerWidth >= 1024) {
-				initBar();
-			} else {
-				initHamburger();
-			}
-			
-			window.addEventListener('resize', toggleNavigation);
-		}
+		import MainMenu from './MainMenu.js';
+		import Popup from './Popup.js';
+
+		document.querySelectorAll('[data-component="Popup"]').forEach(item => new Popup(item).init());
+		document.querySelectorAll('[data-component="MainMenu"]').forEach(item => new MainMenu(item).init());
 	</script>
-	
-	
-	<script type="module">
-		import { Popup } from './index.js';
-		document.querySelectorAll('[data-js-popup-button]')
-			.forEach(popupButton => new Popup(popupButton).init());
-	</script>
-	
+
 </body>
 </html>
